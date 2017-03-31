@@ -6,12 +6,12 @@
  * @description
  *
  */
-let zhuanlan = require('./Post');
-let User = require('./User');
-let Collection = require('./Collection');
-let Topic = require('./Topic');
-let Answer = require('./Answer');
-let Question = require('./Question');
+let zhuanlan = require('./Post')
+let User = require('./User')
+let Collection = require('./Collection')
+let Topic = require('./Topic')
+let Answer = require('./Answer')
+let Question = require('./Question')
 
 module.exports = {
   Post: zhuanlan,
@@ -20,4 +20,4 @@ module.exports = {
   Collection,
   Answer,
   Question
-};
+}

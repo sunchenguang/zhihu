@@ -6,21 +6,20 @@
  * @description
  *
  */
-'use strict';
-const {request, cheerio} = require('../config/commonModules');
+'use strict'
+const {request, cheerio} = require('../config/commonModules')
 
-const config = require('../config');
-const API = require('../config/api');
+const config = require('../config')
+const API = require('../config/api')
 
-
-function formatFollowData(str) {
+function formatFollowData (str) {
   if (str.indexOf('K') !== -1) {
-    return parseInt(str) * 1000;
+    return parseInt(str) * 1000
   }
   // if (str.indexOf('K') !== -1) {
   //   return parseInt(str) * 10000;
   // }
-  return parseInt(str);
+  return parseInt(str)
 }
 
 /*
@@ -33,38 +32,38 @@ let info = (name) => {
     qs: {
       params: JSON.stringify({
         'url_token': name
-      }),
-    },
-  };
+      })
+    }
+  }
 
   return request(data).then(function (content) {
-    let responseBody = content.body;
-    let $ = cheerio.load(responseBody);
-    let values = $('span.value');
+    let responseBody = content.body
+    let $ = cheerio.load(responseBody)
+    let values = $('span.value')
     let result = {
       answer: formatFollowData(values.eq(0).text()),
       post: formatFollowData(values.eq(1).text()),
-      follower: formatFollowData(values.eq(2).text()),
-    };
-    result.profileUrl = config.zhihu + $('a.avatar-link').attr('href');
-    result.name = $('span.name').text();
-    let male = $('.icon-profile-female');
-    result.sex = male.length === 1 ? 'female' : 'male';
-    return result;
-  });
-};
+      follower: formatFollowData(values.eq(2).text())
+    }
+    result.profileUrl = config.zhihu + $('a.avatar-link').attr('href')
+    result.name = $('span.name').text()
+    let male = $('.icon-profile-female')
+    result.sex = male.length === 1 ? 'female' : 'male'
+    return result
+  })
+}
 
 let questions = (qID) => {
-};
+}
 
 let answers = (qID) => {
-};
+}
 
 let zhuanlansFocus = () => {
-};
+}
 
 let topic = () => {
-};
+}
 
 module.exports = {
   info,
@@ -75,5 +74,5 @@ module.exports = {
   topic,
 
   // Deprecated
-  getUserByName: info,
-};
+  getUserByName: info
+}

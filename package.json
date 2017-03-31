@@ -21,8 +21,12 @@
     "request-promise": "^3.0.0"
   },
   "devDependencies": {
-    "should": "^4.3.0",
-    "mocha": "*"
+    "eslint": "^3.18.0",
+    "eslint-config-standard": "^7.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^2.1.1",
+    "mocha": "*",
+    "should": "^4.3.0"
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --timeout 15000"
