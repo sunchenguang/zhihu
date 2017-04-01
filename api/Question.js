@@ -1,7 +1,7 @@
 'use strict'
 const {request, cheerio} = require('../config/commonModules')
 
-let answers = function (params) {
+let answers = async function (params) {
   if (typeof params === 'string') {
     params = {
       token: arguments[0],
@@ -27,49 +27,46 @@ let answers = function (params) {
       'Referer': 'https://www.zhihu.com/question/' + params.token
     }
   }
+  let content = await request(opt)
+  let ret
+  try {
+    let data = JSON.parse(content.body)
+    if (Array.isArray(data.msg)) {
+      ret = data.msg.map(function (payload) {
+        let author, authorAnchor, voters, content, ans
+        let $ = cheerio.load(payload, {
+          decodeEntities: false
+        })
 
-  return request(opt)
-    .then(function (content) {
-      let ret
-      try {
-        let data = JSON.parse(content.body)
-        if (Array.isArray(data.msg)) {
-          ret = data.msg.map(function (payload) {
-            let author, authorAnchor, voters, content, ans
-            let $ = cheerio.load(payload, {
-              decodeEntities: false
-            })
+        author = $('.zm-item-answer-author-info')
+        authorAnchor = author.find('.author-link')
+        voters = $('span.voters a')
+        content = $('.zm-editable-content')
+        ans = {}
 
-            author = $('.zm-item-answer-author-info')
-            authorAnchor = author.find('.author-link')
-            voters = $('span.voters a')
-            content = $('.zm-editable-content')
-            ans = {}
-
-            if (authorAnchor.length) {
-              ans.author = {
-                name: authorAnchor.text(),
-                profileUrl: authorAnchor.attr('href'),
-                bio: author.find('span[title]').attr('title'),
-                avatar: author.find('img').attr('src')
-              }
-            } else {
-              ans.author = {
-                name: '匿名用户'
-              }
-            }
-
-            ans.voters = voters.length ? parseInt(voters.text()) : 0
-            ans.text = content.text()
-            ans.html = content.html()
-
-            return ans
-          })
+        if (authorAnchor.length) {
+          ans.author = {
+            name: authorAnchor.text(),
+            profileUrl: authorAnchor.attr('href'),
+            bio: author.find('span[title]').attr('title'),
+            avatar: author.find('img').attr('src')
+          }
+        } else {
+          ans.author = {
+            name: '匿名用户'
+          }
         }
-      } catch (e) {
-      }
-      return ret
-    })
+
+        ans.voters = voters.length ? parseInt(voters.text()) : 0
+        ans.text = content.text()
+        ans.html = content.html()
+
+        return ans
+      })
+    }
+  } catch (e) {
+  }
+  return ret
 }
 
 module.exports = {

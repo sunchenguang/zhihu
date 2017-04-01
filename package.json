@@ -29,7 +29,9 @@
     "should": "^4.3.0"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --timeout 15000"
+    "test": "mocha --timeout 15000",
+    "lint": "eslint api config",
+    "lint:fix": "eslint api config index.js --fix"
   },
   "repository": {
     "type": "git",

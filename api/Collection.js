@@ -53,7 +53,7 @@ function getItems (body) {
  * @param url
  * @returns {*}
  */
-function getDataByPage (url) {
+async function getDataByPage (url) {
   if (url.indexOf(API.collection.url) < 0) {
     throw new Error('Url not match!')
   }
@@ -62,9 +62,9 @@ function getDataByPage (url) {
     url,
     headers: config.headers
   }
-  return request(options).then(function (body) {
-    return getItems(body.body)
-  })
+  let body = await request(options)
+
+  return getItems(body.body)
 }
 
 /**
@@ -72,20 +72,20 @@ function getDataByPage (url) {
  * @param url
  * @returns {*}
  */
-function getPagination (url) {
+async function getPagination (url) {
   let options = {
     url,
     headers: config.headers
   }
-  return request(options).then(function (body) {
-    let $ = cheerio.load(body.body)
-    let pages = $('.zm-invite-pager span').eq(-2).text()
-    let currentPage = $('.zm-invite-pager span.zg-gray-normal').eq(-1).text()
-    return {
-      pages: parseInt(pages),
-      current: parseInt(currentPage)
-    }
-  })
+  let body = await request(options)
+
+  let $ = cheerio.load(body.body)
+  let pages = $('.zm-invite-pager span').eq(-2).text()
+  let currentPage = $('.zm-invite-pager span.zg-gray-normal').eq(-1).text()
+  return {
+    pages: parseInt(pages),
+    current: parseInt(currentPage)
+  }
 }
 
 /**
@@ -94,31 +94,33 @@ function getPagination (url) {
  * @param url
  * @returns {*}
  */
-function getAllPageData (url) {
+async function getAllPageData (url) {
   let formatUrl = Url.parse(url)
   let realUrl = config.zhihu + formatUrl.pathname
   let allItems = []
-  return getPagination(url).then(function (paginations) {
-    let pages = []
-    for (let i = 1; i <= paginations.pages; i++) {
-      pages.push(i)
-    }
+  let paginations = await getPagination(url)
 
-    // 并发
-    return Promise.map(pages, function (page) {
-      let pageUrl = realUrl + '?page=' + page
-      return getDataByPage(pageUrl).then(function (items) {
-        allItems = allItems.concat(items)
-      })
-    }, {concurrency: 5}).then(function (total) {
+  let pages = []
+  for (let i = 1; i <= paginations.pages; i++) {
+    pages.push(i)
+  }
+
+  // 并发
+  return Promise.map(pages, function (page) {
+    let pageUrl = realUrl + '?page=' + page
+    return getDataByPage(pageUrl).then(function (items) {
+      allItems = allItems.concat(items)
+    })
+  }, {concurrency: 5})
+    .then(function (total) {
       return total
     })
-  }).then(function () {
-    return allItems
-  })
+    .then(() => {
+      return allItems
+    })
 }
 
-function getCollectionInfo (url) {
+async function getCollectionInfo (url) {
   if (url.indexOf(API.collection.url) < 0) {
     throw new Error('Url not match!')
   }
@@ -128,21 +130,21 @@ function getCollectionInfo (url) {
     url,
     headers: config.headers
   }
-  return request(options).then(function (body) {
-    let $ = cheerio.load(body[1])
-    let title = $('#zh-fav-head-title').text()
-    let $user = $('#zh-single-answer-author-info .zm-list-content-title a')
-    let user = {
-      img: $('a.zm-list-avatar-link .zm-list-avatar-medium').attr('src'),
-      name: $user.text(),
-      url: $user.attr('href')
-    }
-    return {
-      cid,
-      title,
-      user
-    }
-  })
+  let body = await request(options)
+
+  let $ = cheerio.load(body[1])
+  let title = $('#zh-fav-head-title').text()
+  let $user = $('#zh-single-answer-author-info .zm-list-content-title a')
+  let user = {
+    img: $('a.zm-list-avatar-link .zm-list-avatar-medium').attr('src'),
+    name: $user.text(),
+    url: $user.attr('href')
+  }
+  return {
+    cid,
+    title,
+    user
+  }
 }
 
 module.exports = {

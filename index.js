@@ -6,6 +6,6 @@
  * @description
  *
  */
-let api = require('./api');
+let api = require('./api')
 
-module.exports = api;
+module.exports = api

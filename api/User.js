@@ -26,7 +26,7 @@ function formatFollowData (str) {
  * @param name  The name of Zhihu user
  * @return      A promise
  */
-let info = (name) => {
+let info = async (name) => {
   let data = {
     url: API.user.info,
     qs: {
@@ -35,22 +35,20 @@ let info = (name) => {
       })
     }
   }
-
-  return request(data).then(function (content) {
-    let responseBody = content.body
-    let $ = cheerio.load(responseBody)
-    let values = $('span.value')
-    let result = {
-      answer: formatFollowData(values.eq(0).text()),
-      post: formatFollowData(values.eq(1).text()),
-      follower: formatFollowData(values.eq(2).text())
-    }
-    result.profileUrl = config.zhihu + $('a.avatar-link').attr('href')
-    result.name = $('span.name').text()
-    let male = $('.icon-profile-female')
-    result.sex = male.length === 1 ? 'female' : 'male'
-    return result
-  })
+  let content = await request(data)
+  let responseBody = content.body
+  let $ = cheerio.load(responseBody)
+  let values = $('span.value')
+  let result = {
+    answer: formatFollowData(values.eq(0).text()),
+    post: formatFollowData(values.eq(1).text()),
+    follower: formatFollowData(values.eq(2).text())
+  }
+  result.profileUrl = config.zhihu + $('a.avatar-link').attr('href')
+  result.name = $('span.name').text()
+  let male = $('.icon-profile-female')
+  result.sex = male.length === 1 ? 'female' : 'male'
+  return result
 }
 
 let questions = (qID) => {

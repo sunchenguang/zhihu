@@ -6,8 +6,8 @@
  */
 'use strict'
 const {cheerio, request, _} = require('../config/commonModules')
-
 const config = require('../config/api')
+const StrUtil = require('../util/strUtil')
 
 let _renderUrl = (answerId) => {
   let url = _.template(config.answer.voters)({answerId})
@@ -20,40 +20,96 @@ let _renderUrl = (answerId) => {
  *                  "/question/28207685/answer/39974928",
  *                  the answerId of this post is "11382008" instead.
  */
-let voters = (answerId) => {
-  let url = _renderUrl(answerId)
-  let options = {
-    url
-  }
+// let voters1 = (answerId) => {
+//   let url = _renderUrl(answerId)
+//   let options = {
+//     url
+//   }
+//
+//   return request(options).then(function (res) {
+//     let buffer = JSON.parse(res.body)
+//     let voters = []
+//
+//     if (Array.isArray(buffer.payload)) {
+//       voters = buffer.payload.map(function (payload) {
+//         let $, user, status, anchor
+//
+//         $ = cheerio.load(payload)
+//         user = {}
+//         anchor = $('a[title]')
+//         status = $('ul.status > li').children('a, span')
+//
+//         user.name = anchor.attr('title')
+//         user.anonymous = !user.name
+//
+//         if (!user.anonymous) {
+//           user.profileUrl = anchor.attr('href')
+//           user.sex = (function (str) {
+//             switch (str) {
+//               case '他':
+//                 return 'male'
+//               case '她':
+//                 return 'female'
+//               default:
+//                 return undefined
+//             }
+//           })($('.zg-btn-follow').text().slice(2))
+//         } else {
+//           user.name = '匿名用户'
+//         }
+//
+//         user.avatar = $('.zm-item-img-avatar').attr('src')
+//         user.like = parseInt(status.eq(0).text())
+//         user.thank = parseInt(status.eq(1).text())
+//         user.question = (function (el) {
+//           let href = el.attr('href')
+//           if (href) {
+//             this.questionUrl = href
+//           }
+//           return parseInt(el.text())
+//         }.call(user, status.eq(2)))
+//         user.answer = (function (el) {
+//           let href = el.attr('href')
+//           if (href) {
+//             this.answerUrl = href
+//           }
+//           return parseInt(el.text())
+//         }.call(user, status.eq(3)))
+//
+//         return user
+//       })
+//     }
+//     return voters
+//   })
+// }
 
-  return request(options).then(function (res) {
-    let buffer = JSON.parse(res.body)
+let voters = async (answerId) => {
+  try {
+    let options, url, res
+    url = _renderUrl(answerId)
+    options = {
+      url
+    }
+    // res是promise返回后的值
+    res = await request(options)
+
+    let payloads = JSON.parse(res.body).payload
     let voters = []
-
-    if (Array.isArray(buffer.payload)) {
-      voters = buffer.payload.map(function (payload) {
+    if (Array.isArray(payloads)) {
+      voters = payloads.map(function (payload) {
         let $, user, status, anchor
 
         $ = cheerio.load(payload)
         user = {}
         anchor = $('a[title]')
         status = $('ul.status > li').children('a, span')
-        user.name = anchor.attr('title')
 
+        user.name = anchor.attr('title')
         user.anonymous = !user.name
 
         if (!user.anonymous) {
           user.profileUrl = anchor.attr('href')
-          user.sex = (function (str) {
-            switch (str) {
-              case '他':
-                return 'male'
-              case '她':
-                return 'female'
-              default:
-                return undefined
-            }
-          })($('.zg-btn-follow').text().slice(2))
+          user.sex = StrUtil.getGender($('.zg-btn-follow').text().slice(2))
         } else {
           user.name = '匿名用户'
         }
@@ -61,26 +117,19 @@ let voters = (answerId) => {
         user.avatar = $('.zm-item-img-avatar').attr('src')
         user.like = parseInt(status.eq(0).text())
         user.thank = parseInt(status.eq(1).text())
-        user.question = (function (el) {
-          let href = el.attr('href')
-          if (href) {
-            this.questionUrl = href
-          }
-          return parseInt(el.text())
-        }.call(user, status.eq(2)))
-        user.answer = (function (el) {
-          let href = el.attr('href')
-          if (href) {
-            this.answerUrl = href
-          }
-          return parseInt(el.text())
-        }.call(user, status.eq(3)))
+        user.question = parseInt(status.eq(2).text())
+        user.questionUrl = status.eq(2).attr('href')
+        user.answer = parseInt(status.eq(3).text())
+        user.answerUrl = status.eq(3).attr('href')
 
         return user
       })
+
+      return voters
     }
-    return voters
-  })
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 module.exports = {
