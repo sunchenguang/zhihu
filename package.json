@@ -21,6 +21,7 @@
     "request-promise": "^3.0.0"
   },
   "devDependencies": {
+    "ava": "^0.18.2",
     "eslint": "^3.18.0",
     "eslint-config-standard": "^7.1.0",
     "eslint-plugin-promise": "^3.5.0",
@@ -29,7 +30,7 @@
     "should": "^4.3.0"
   },
   "scripts": {
-    "test": "mocha --timeout 15000",
+    "test": "ava",
     "lint": "eslint api config",
     "lint:fix": "eslint api config index.js --fix"
   },
